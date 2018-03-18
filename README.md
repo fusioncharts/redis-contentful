@@ -16,8 +16,6 @@ npm install cf-redis --save
 
 ## Usage
 
----
-
 Create an instance of `cf-redis` by passing contentful space ID & access token.
 
 ```js
@@ -30,8 +28,6 @@ const client = new cfRedis({
 ```
 
 ## API
-
----
 
 ### sync
 
@@ -65,13 +61,9 @@ You'll get an object with your content type ID's as keys and their values as arr
 }
 ```
 
----
-
 ## Redis Store
 
 > In Redis, the keys (content types) will be prefixed with cf-redis to uniquely identify keys created by cf-redis 🤓
-
----
 
 ## License
 

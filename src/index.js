@@ -74,7 +74,7 @@ class CFRedis {
     return hashes.reduce(
       (final, value, index) =>
         Object.assign(final, {
-          [value]: Object.keys(responses[index]).map(
+          [value.split('cf-redis:').pop()]: Object.keys(responses[index]).map(
             key => responses[index][key]
           ),
         }),
