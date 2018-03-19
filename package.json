@@ -1,6 +1,6 @@
 {
   "name": "redis-contentful",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A tiny library to map Contentful ☁️ space into Redis ⚡️",
   "main": "src/index.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "type": "git",
     "url": "git+https://github.com/shreyas-a/redis-contentful.git"
   },
-  "keywords": [],
+  "keywords": ["contentful", "redis", "cms", "cache"],
   "author": "Shreyas Agarkar <shreyas.a24@gmail.com>",
   "license": "MIT",
   "bugs": {
