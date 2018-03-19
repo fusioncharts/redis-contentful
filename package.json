@@ -1,6 +1,6 @@
 {
-  "name": "cf-redis",
-  "version": "0.1.4",
+  "name": "redis-contentful",
+  "version": "0.2.0",
   "description": "A tiny library to map Contentful ☁️ space into Redis ⚡️",
   "main": "src/index.js",
   "scripts": {
@@ -30,13 +30,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shreyas-a/cf-redis.git"
+    "url": "git+https://github.com/shreyas-a/redis-contentful.git"
   },
   "keywords": [],
   "author": "Shreyas Agarkar <shreyas.a24@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/shreyas-a/cf-redis/issues"
+    "url": "https://github.com/shreyas-a/redis-contentful/issues"
   },
-  "homepage": "https://github.com/shreyas-a/cf-redis#readme"
+  "homepage": "https://github.com/shreyas-a/redis-contentful#readme"
 }

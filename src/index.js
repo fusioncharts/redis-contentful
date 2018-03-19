@@ -2,7 +2,7 @@ const { promisify } = require('util');
 const redis = require('redis');
 const contentful = require('contentful');
 
-class CFRedis {
+class RedisContentful {
   constructor(details) {
     this.nextSyncToken = '';
 
@@ -38,7 +38,7 @@ class CFRedis {
             );
             promises.push(
               hset(
-                `cf-redis:${contentType}`,
+                `redis-contentful:${contentType}`,
                 metadata.id,
                 JSON.stringify(entry.fields)
               )
@@ -49,7 +49,7 @@ class CFRedis {
             const hdel = promisify(this.redisClient.hdel).bind(
               this.redisClient
             );
-            promises.push(hdel(`cf-redis:${contentType}`, metadata.id));
+            promises.push(hdel(`redis-contentful:${contentType}`, metadata.id));
             break;
           }
           default:
@@ -65,7 +65,11 @@ class CFRedis {
   async get(contentType) {
     const scan = promisify(this.redisClient.scan).bind(this.redisClient);
     const hgetall = promisify(this.redisClient.hgetall).bind(this.redisClient);
-    const response = await scan('0', 'MATCH', `cf-redis:${contentType || '*'}`);
+    const response = await scan(
+      '0',
+      'MATCH',
+      `redis-contentful:${contentType || '*'}`
+    );
     const hashes = response[1] || [];
 
     const promises = hashes.map(hash => hgetall(hash));
@@ -74,13 +78,13 @@ class CFRedis {
     return hashes.reduce(
       (final, value, index) =>
         Object.assign(final, {
-          [value.split('cf-redis:').pop()]: Object.keys(responses[index]).map(
-            key => responses[index][key]
-          ),
+          [value.split('redis-contentful:').pop()]: Object.keys(
+            responses[index]
+          ).map(key => responses[index][key]),
         }),
       {}
     );
   }
 }
 
-module.exports = CFRedis;
+module.exports = RedisContentful;

@@ -1,14 +1,14 @@
 const { expect } = require('chai');
-const CFRedis = require('../src/index.js');
+const RedisContentful = require('../src/index.js');
 
-describe('cf-redis', () => {
-  const client = new CFRedis({
+describe('redis-contentful', () => {
+  const client = new RedisContentful({
     space: 'space id',
     accessToken: 'token',
   });
 
   it('creats an instance', () => {
-    expect(client).to.be.an.instanceof(CFRedis);
+    expect(client).to.be.an.instanceof(RedisContentful);
   });
 
   describe('api', () => {

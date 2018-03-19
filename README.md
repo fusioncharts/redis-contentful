@@ -1,8 +1,8 @@
 <div align="center">
  
-<h1>Contentful Redis</h1>
+<h1>Redis Contentful</h1>
 
-[![npm](https://img.shields.io/npm/v/cf-redis.svg)](https://www.npmjs.com/package/cf-redis) [![license](https://img.shields.io/github/license/shreyas-a/cf-redis.svg)](https://github.com/shreyas-a/cf-redis/blob/master/LICENSE)
+[![npm](https://img.shields.io/npm/v/redis-contentful.svg)](https://www.npmjs.com/package/redis-contentful) [![license](https://img.shields.io/github/license/shreyas-a/redis-contentful.svg)](https://github.com/shreyas-a/redis-contentful/blob/master/LICENSE)
 
 A tiny library to map Contentful ☁️ space into Redis ⚡️
 
@@ -11,17 +11,17 @@ A tiny library to map Contentful ☁️ space into Redis ⚡️
 ## Installation
 
 ```sh
-npm install cf-redis --save
+npm install redis-contentful --save
 ```
 
 ## Usage
 
-Create an instance of `cf-redis` by passing contentful space ID & access token.
+Create an instance of `redis-contentful` by passing contentful space ID & access token.
 
 ```js
-import cfRedis from 'cf-redis';
+import RedisContentful from 'redis-contentful';
 
-const client = new cfRedis({
+const client = new RedisContentful({
   space: '<Space ID>',
   accessToken: '<Access Token>',
 });
@@ -56,14 +56,14 @@ You'll get an object with your content type ID's as keys and their values as arr
 
 ```js
 {
-    "<ContentType ID 1>": [{}, {}, {}],
-    "<ContentType ID 2>": [{}]
+    "<awesome-key>": [{}, {}, {}],
+    "<dumb-key>": [{}]
 }
 ```
 
 ## Redis Store
 
-> In Redis, the keys (content types) will be prefixed with cf-redis to uniquely identify keys created by cf-redis 🤓
+> In Redis, the keys (content types) will be prefixed with redis-contentful to uniquely identify keys created by redis-contentful 🤓
 
 ## License
 
