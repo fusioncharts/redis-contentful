@@ -35,6 +35,7 @@ import RedisContentful from 'redis-contentful';
 const client = new RedisContentful({
   space: '<Space ID>',
   accessToken: '<Access Token>',
+  local: 'en-GB', // This is an optional parameter, by default en-US will be used
 });
 ```
 

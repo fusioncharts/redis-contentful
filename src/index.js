@@ -12,6 +12,7 @@ class RedisContentful {
     });
 
     this.redisClient = redis.createClient();
+    this.local = details.local || 'en-US';
   }
 
   // Public Methods
@@ -80,7 +81,15 @@ class RedisContentful {
         Object.assign(final, {
           [value.split('redis-contentful:').pop()]: Object.keys(
             responses[index]
-          ).map(key => responses[index][key]),
+          ).map(key => {
+            const parsed = JSON.parse(responses[index][key]);
+
+            Object.keys(parsed).forEach(fieldKey => {
+              parsed[fieldKey] = parsed[fieldKey][this.local];
+            });
+
+            return parsed;
+          }),
         }),
       {}
     );
