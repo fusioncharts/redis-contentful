@@ -1,18 +1,18 @@
 const { promisify } = require('util');
-const redis = require('redis');
-const contentful = require('contentful');
+const Redis = require('redis');
+const Contentful = require('contentful');
 
 class RedisContentful {
-  constructor(details) {
-    this.nextSyncToken = '';
+  constructor({ redis, contentful }) {
+    this.redisClient = Redis.createClient();
+    this.redisClient.select(redis.database || 0);
 
-    this.cfClient = contentful.createClient({
-      space: details.space,
-      accessToken: details.accessToken,
+    this.cfClient = Contentful.createClient({
+      space: contentful.space,
+      accessToken: contentful.accessToken,
     });
-
-    this.redisClient = redis.createClient();
-    this.local = details.local || 'en-US';
+    this.nextSyncToken = '';
+    this.local = contentful.local || 'en-US';
   }
 
   // Public Methods
