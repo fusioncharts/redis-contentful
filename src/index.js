@@ -26,7 +26,7 @@ const extract = (data, locale) => {
     id: data.sys.id,
     createdAt: data.sys.createdAt,
     updatedAt: data.sys.updatedAt,
-    fields: data.fields,
+    ...data.fields,
   };
 };
 
