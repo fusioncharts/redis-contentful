@@ -2,17 +2,45 @@ const { promisify } = require('util');
 const Redis = require('redis');
 const Contentful = require('contentful');
 
+/**
+ * A recursive function to extract meaningful
+ * information from Redis.
+ * @param {object} data
+ * @param {string} locale
+ * @returns {object}
+ */
+const extract = (data, locale) => {
+  const { fields } = data;
+  Object.keys(fields).forEach(fieldKey => {
+    if (fields[fieldKey] && fields[fieldKey][locale] instanceof Array) {
+      fields[fieldKey] = fields[fieldKey][locale].map(innerData =>
+        extract(innerData, locale)
+      );
+    } else {
+      fields[fieldKey] = fields[fieldKey][locale];
+    }
+  });
+
+  // Removing the unwanted information
+  return {
+    id: data.sys.id,
+    createdAt: data.sys.createdAt,
+    updatedAt: data.sys.updatedAt,
+    fields: data.fields,
+  };
+};
+
 class RedisContentful {
   constructor({ redis, contentful }) {
     this.redisClient = Redis.createClient();
-    this.redisClient.select(redis.database || 0);
+    this.redisClient.select((redis && redis.database) || 0);
 
     this.cfClient = Contentful.createClient({
       space: contentful.space,
       accessToken: contentful.accessToken,
     });
     this.nextSyncToken = '';
-    this.local = contentful.local || 'en-US';
+    this.locale = contentful.locale || 'en-US';
   }
 
   // Public Methods
@@ -41,7 +69,7 @@ class RedisContentful {
               hset(
                 `redis-contentful:${contentType}`,
                 metadata.id,
-                JSON.stringify(entry.fields)
+                JSON.stringify(entry)
               )
             );
             break;
@@ -81,15 +109,7 @@ class RedisContentful {
         Object.assign(final, {
           [value.split('redis-contentful:').pop()]: Object.keys(
             responses[index]
-          ).map(key => {
-            const parsed = JSON.parse(responses[index][key]);
-
-            Object.keys(parsed).forEach(fieldKey => {
-              parsed[fieldKey] = parsed[fieldKey][this.local];
-            });
-
-            return parsed;
-          }),
+          ).map(key => extract(JSON.parse(responses[index][key]), this.locale)),
         }),
       {}
     );

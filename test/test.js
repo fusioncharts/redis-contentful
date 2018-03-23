@@ -3,8 +3,14 @@ const RedisContentful = require('../src/index.js');
 
 describe('redis-contentful', () => {
   const client = new RedisContentful({
-    space: 'space id',
-    accessToken: 'token',
+    redis: {
+      database: 1,
+    },
+    contentful: {
+      space: 'space id',
+      accessToken: 'token',
+      locale: 'en-US',
+    },
   });
 
   it('creats an instance', () => {

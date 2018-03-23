@@ -33,9 +33,16 @@ Create an instance of `redis-contentful` by passing contentful space ID & access
 import RedisContentful from 'redis-contentful';
 
 const client = new RedisContentful({
-  space: '<Space ID>',
-  accessToken: '<Access Token>',
-  local: 'en-GB', // This is an optional parameter, by default en-US will be used
+  // Optional param - Select specific Redis DB
+  redis: {
+    database: 0,
+  },
+  contentful: {
+    space: '<Space ID>',
+    accessToken: '<Access Token>',
+    // Optional param - Default en-US will be used
+    locale: 'en-GB',
+  },
 });
 ```
 
@@ -75,7 +82,7 @@ You'll get an object with your content type ID's as keys and their values as arr
 
 ## Redis Store
 
-> In Redis, the keys (content types) will be prefixed with redis-contentful to uniquely identify keys created by redis-contentful 🤓
+> In Redis, the keys (content types) will be prefixed with `redis-contentful` to uniquely identify keys created by `redis-contentful` 🤓
 
 ## License
 
