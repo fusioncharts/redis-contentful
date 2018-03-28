@@ -33,7 +33,11 @@ const extract = (data, locale) => {
 class RedisContentful {
   constructor({ redis, contentful }) {
     try {
-      this.redisClient = Redis.createClient();
+      this.redisClient = Redis.createClient({
+        ...(redis &&
+          redis.host &&
+          redis.port && { host: redis.host, port: redis.port }),
+      });
       this.redisClient.select((redis && redis.database) || 0);
 
       this.cfClient = Contentful.createClient({

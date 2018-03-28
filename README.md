@@ -27,15 +27,15 @@ Create an instance of `redis-contentful` by passing contentful space ID & access
 import RedisContentful from 'redis-contentful';
 
 const client = new RedisContentful({
-  // Optional param - Select specific Redis DB
   redis: {
-    database: 0,
+    database: 0, // Optional param, default - 0
+    host: '', // Optional param, default - 127.0.0.1
+    port: '', // Optional param, default - 6379
   },
   contentful: {
     space: '<Space ID>',
     accessToken: '<Access Token>',
-    // Optional param - Default en-US will be used
-    locale: 'en-GB',
+    locale: 'en-GB', // Optional param, default - en-US
   },
 });
 ```
