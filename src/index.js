@@ -10,24 +10,28 @@ const Contentful = require('contentful');
  * @returns {object}
  */
 const extract = (data, locale) => {
-  const { fields } = data;
-  Object.keys(fields).forEach(fieldKey => {
-    if (fields[fieldKey] && fields[fieldKey][locale] instanceof Array) {
-      fields[fieldKey] = fields[fieldKey][locale].map(innerData =>
-        extract(innerData, locale)
-      );
-    } else {
-      fields[fieldKey] = fields[fieldKey][locale];
-    }
-  });
+  if (data && data.fields) {
+    const { fields } = data;
+    Object.keys(fields).forEach(fieldKey => {
+      if (fields[fieldKey] && fields[fieldKey][locale] instanceof Array) {
+        fields[fieldKey] = fields[fieldKey][locale].map(innerData =>
+          extract(innerData, locale)
+        );
+      } else {
+        fields[fieldKey] = fields[fieldKey][locale];
+      }
+    });
 
-  // Removing the unwanted information
-  return {
-    id: data.sys.id,
-    createdAt: data.sys.createdAt,
-    updatedAt: data.sys.updatedAt,
-    ...data.fields,
-  };
+    // Removing the unwanted information
+    return {
+      id: data.sys.id,
+      createdAt: data.sys.createdAt,
+      updatedAt: data.sys.updatedAt,
+      ...data.fields,
+    };
+  }
+
+  return {};
 };
 
 class RedisContentful {
@@ -51,7 +55,7 @@ class RedisContentful {
   }
 
   // Public Methods
-  async sync() {
+  async sync(shouldReset) {
     try {
       const set = promisify(this.redisClient.set).bind(this.redisClient);
       const scan = promisify(this.redisClient.scan).bind(this.redisClient);
@@ -60,8 +64,15 @@ class RedisContentful {
       const del = promisify(this.redisClient.del).bind(this.redisClient);
 
       const promises = [];
-      const nextSyncToken = await hget('redis-contentful', 'nextSyncToken');
-      const isInitial = !nextSyncToken;
+
+      let isInitial;
+      let nextSyncToken;
+      if (shouldReset) {
+        isInitial = true;
+      } else {
+        nextSyncToken = await hget('redis-contentful', 'nextSyncToken');
+        isInitial = !nextSyncToken;
+      }
 
       if (isInitial) {
         const flushall = promisify(this.redisClient.flushall).bind(
@@ -113,7 +124,9 @@ class RedisContentful {
       const response = await scan(
         '0',
         'MATCH',
-        `${contentType ? `${contentType}:*` : '*:*'}`
+        `${contentType ? `${contentType}:*` : '*:*'}`,
+        'COUNT',
+        '10000'
       );
       const keys = response[1] || [];
 
@@ -133,7 +146,7 @@ class RedisContentful {
         return final;
       }, {});
     } catch (error) {
-      return Promise.reject(new Error({ message: 'Get Failed' }));
+      return Promise.reject(new Error('GET Failed'));
     }
   }
 }
