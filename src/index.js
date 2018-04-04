@@ -17,6 +17,12 @@ const extract = (data, locale) => {
         fields[fieldKey] = fields[fieldKey][locale].map(innerData =>
           extract(innerData, locale)
         );
+      } else if (
+        fields[fieldKey] &&
+        fields[fieldKey][locale] instanceof Object &&
+        fields[fieldKey][locale].fields
+      ) {
+        fields[fieldKey] = extract(fields[fieldKey][locale], locale);
       } else {
         fields[fieldKey] = fields[fieldKey][locale];
       }
@@ -29,9 +35,11 @@ const extract = (data, locale) => {
       updatedAt: data.sys.updatedAt,
       ...data.fields,
     };
+  } else if (typeof data === 'string') {
+    return data;
   }
 
-  return {};
+  return undefined;
 };
 
 class RedisContentful {

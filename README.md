@@ -50,6 +50,12 @@ Syncs the latest space content from Contentful and dumps it in your Redis server
 await client.sync();
 ```
 
+Send an optional boolean param to `sync` if you want to reset your redis cache ♻️
+
+```js
+await client.sync(true);
+```
+
 ### get
 
 Gets all data directly from Redis 🚀
