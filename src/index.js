@@ -114,7 +114,7 @@ class RedisContentful {
 
       // Adding all new entries in redis
       if (response.entries && response.entries.length) {
-        response.entries.forEach(async entry => {
+        response.entries.forEach(entry => {
           const { sys } = entry;
           const contentType = sys.contentType.sys.id;
           promises.push(set(`${contentType}:${sys.id}`, JSON.stringify(entry)));
