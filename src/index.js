@@ -123,14 +123,16 @@ class RedisContentful {
 
       // Deleting all the deleted entries from redis
       if (response.deletedEntries && response.deletedEntries.length) {
-        response.deletedEntries.forEach(async entry => {
+        for (let i = 0; i < response.deletedEntries.length; i += 1) {
+          const entry = response.deletedEntries[i];
           const { sys } = entry;
+          // eslint-disable-next-line no-await-in-loop
           const responseKey = await scan('0', 'MATCH', `*:${sys.id}`);
 
           if (responseKey[1]) {
             promises.push(del(responseKey[1]));
           }
-        });
+        }
       }
 
       await hset('redis-contentful', 'nextSyncToken', response.nextSyncToken);
