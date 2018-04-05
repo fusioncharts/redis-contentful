@@ -1,6 +1,6 @@
 {
   "name": "redis-contentful",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "A tiny library to map Contentful ☁️ space into Redis ⚡️",
   "main": "src/index.js",
   "scripts": {
@@ -8,11 +8,7 @@
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "*.js": [
-      "eslint",
-      "prettier --write",
-      "git add"
-    ]
+    "*.js": ["eslint", "prettier --write", "git add"]
   },
   "engines": {
     "node": ">=8.6.0"
@@ -36,12 +32,7 @@
     "type": "git",
     "url": "git+https://github.com/shreyas-a/redis-contentful.git"
   },
-  "keywords": [
-    "contentful",
-    "redis",
-    "cms",
-    "cache"
-  ],
+  "keywords": ["contentful", "redis", "cms", "cache"],
   "author": "Shreyas Agarkar <shreyas.a24@gmail.com>",
   "license": "MIT",
   "bugs": {
