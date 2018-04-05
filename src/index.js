@@ -123,8 +123,8 @@ class RedisContentful {
 
       // Deleting all the deleted entries from redis
       if (response.deletedEntries && response.deletedEntries.length) {
-        for (let i = 0; i < response.deletedEntries.length; i += 1) {
-          const entry = response.deletedEntries[i];
+        // eslint-disable-next-line no-restricted-syntax
+        for (const entry of response.deletedEntries) {
           const { sys } = entry;
           // eslint-disable-next-line no-await-in-loop
           const responseKey = await scan('0', 'MATCH', `*:${sys.id}`);
