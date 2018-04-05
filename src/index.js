@@ -179,6 +179,10 @@ class RedisContentful {
       return Promise.reject(error);
     }
   }
+
+  async close() {
+    this.redisClient.quit();
+  }
 }
 
 module.exports = RedisContentful;

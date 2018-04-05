@@ -88,6 +88,14 @@ If you specify a specific key, only that key will be returned in the final objec
 }
 ```
 
+### close
+
+Closes the connection to redis client.
+
+```js
+await client.close();
+```
+
 ## Redis Store
 
 > In Redis, the keys (entries) will be prefixed with their respective content type 🤓

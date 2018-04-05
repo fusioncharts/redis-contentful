@@ -21,8 +21,13 @@ describe('redis-contentful', () => {
     it('should have a sync method', () => {
       expect(client.sync).to.be.a('function');
     });
+
     it('should have a get method', () => {
       expect(client.get).to.be.a('function');
+    });
+
+    it('should have a close method', () => {
+      expect(client.close).to.be.a('function');
     });
   });
 });
