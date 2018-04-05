@@ -6,27 +6,49 @@ const Contentful = require('contentful');
  * A recursive function to extract meaningful
  * information from Redis.
  * @param {object} data
+ * @param {string} field
  * @param {string} locale
  * @returns {object}
  */
-const extract = (data, locale) => {
+const extract = (data, field, locale) => {
   if (data && data.fields) {
     const { fields } = data;
-    Object.keys(fields).forEach(fieldKey => {
-      if (fields[fieldKey] && fields[fieldKey][locale] instanceof Array) {
-        fields[fieldKey] = fields[fieldKey][locale].map(innerData =>
-          extract(innerData, locale)
-        );
-      } else if (
-        fields[fieldKey] &&
-        fields[fieldKey][locale] instanceof Object &&
-        fields[fieldKey][locale].fields
+    if (field && typeof field === 'string') {
+      // Deleting any other fields if specific field is provided
+      Object.keys(fields).forEach(fieldKey => {
+        if (field !== fieldKey) delete fields[fieldKey];
+      });
+
+      // If the field given is of primitive data type
+      if (
+        typeof fields[field][locale] === 'string' ||
+        typeof fields[field][locale] === 'number'
       ) {
-        fields[fieldKey] = extract(fields[fieldKey][locale], locale);
-      } else {
-        fields[fieldKey] = fields[fieldKey][locale];
+        fields[field] = fields[field][locale];
+      } else if (fields[field][locale] instanceof Array) {
+        fields[field] = fields[field][locale].map(innerData =>
+          extract(innerData, '', locale)
+        );
+      } else if (fields[field][locale] instanceof Object) {
+        fields[field] = extract(fields[field][locale], '', locale);
       }
-    });
+    } else {
+      Object.keys(fields).forEach(fieldKey => {
+        if (fields[fieldKey] && fields[fieldKey][locale] instanceof Array) {
+          fields[fieldKey] = fields[fieldKey][locale].map(innerData =>
+            extract(innerData, '', locale)
+          );
+        } else if (
+          fields[fieldKey] &&
+          fields[fieldKey][locale] instanceof Object &&
+          fields[fieldKey][locale].fields
+        ) {
+          fields[fieldKey] = extract(fields[fieldKey][locale], '', locale);
+        } else {
+          fields[fieldKey] = fields[fieldKey][locale];
+        }
+      });
+    }
 
     // Removing the unwanted information
     return {
@@ -35,7 +57,7 @@ const extract = (data, locale) => {
       updatedAt: data.sys.updatedAt,
       ...data.fields,
     };
-  } else if (typeof data === 'string') {
+  } else if (typeof data === 'string' || typeof data === 'number') {
     return data;
   }
 
@@ -124,7 +146,7 @@ class RedisContentful {
     }
   }
 
-  async get(contentType) {
+  async get(contentType, field) {
     try {
       const get = promisify(this.redisClient.get).bind(this.redisClient);
       const scan = promisify(this.redisClient.scan).bind(this.redisClient);
@@ -144,17 +166,17 @@ class RedisContentful {
       return keys.reduce((final, value, index) => {
         if (final[value.split(':').shift()]) {
           final[value.split(':').shift()].push(
-            extract(JSON.parse(responses[index]), this.locale)
+            extract(JSON.parse(responses[index]), field, this.locale)
           );
         } else {
           final[value.split(':').shift()] = [
-            extract(JSON.parse(responses[index]), this.locale),
+            extract(JSON.parse(responses[index]), field, this.locale),
           ];
         }
         return final;
       }, {});
     } catch (error) {
-      return Promise.reject(new Error('GET Failed'));
+      return Promise.reject(error);
     }
   }
 }
