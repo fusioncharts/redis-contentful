@@ -143,37 +143,33 @@ class RedisContentful {
   }
 
   async get(contentType, field) {
-    try {
-      const get = promisify(this.redisClient.get).bind(this.redisClient);
-      const scan = promisify(this.redisClient.scan).bind(this.redisClient);
+    const get = promisify(this.redisClient.get).bind(this.redisClient);
+    const scan = promisify(this.redisClient.scan).bind(this.redisClient);
 
-      const response = await scan(
-        '0',
-        'MATCH',
-        `${contentType ? `${contentType}:*` : '*:*'}`,
-        'COUNT',
-        '10000'
-      );
-      const keys = response[1] || [];
+    const response = await scan(
+      '0',
+      'MATCH',
+      `${contentType ? `${contentType}:*` : '*:*'}`,
+      'COUNT',
+      '10000'
+    );
+    const keys = response[1] || [];
 
-      const promises = keys.map(key => get(key));
-      const responses = await Promise.all(promises);
+    const promises = keys.map(key => get(key));
+    const responses = await Promise.all(promises);
 
-      return keys.reduce((final, value, index) => {
-        if (final[value.split(':').shift()]) {
-          final[value.split(':').shift()].push(
-            extract(JSON.parse(responses[index]), field, this.locale)
-          );
-        } else {
-          final[value.split(':').shift()] = [
-            extract(JSON.parse(responses[index]), field, this.locale),
-          ];
-        }
-        return final;
-      }, {});
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    return keys.reduce((final, value, index) => {
+      if (final[value.split(':').shift()]) {
+        final[value.split(':').shift()].push(
+          extract(JSON.parse(responses[index]), field, this.locale)
+        );
+      } else {
+        final[value.split(':').shift()] = [
+          extract(JSON.parse(responses[index]), field, this.locale),
+        ];
+      }
+      return final;
+    }, {});
   }
 
   async close() {
