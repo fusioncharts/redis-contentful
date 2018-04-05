@@ -66,22 +66,18 @@ const extract = (data, field, locale) => {
 
 class RedisContentful {
   constructor({ redis, contentful }) {
-    try {
-      this.redisClient = Redis.createClient({
-        ...(redis &&
-          redis.host &&
-          redis.port && { host: redis.host, port: redis.port }),
-      });
-      this.redisClient.select((redis && redis.database) || 0);
+    this.redisClient = Redis.createClient({
+      ...(redis &&
+        redis.host &&
+        redis.port && { host: redis.host, port: redis.port }),
+    });
+    this.redisClient.select((redis && redis.database) || 0);
 
-      this.cfClient = Contentful.createClient({
-        space: contentful.space,
-        accessToken: contentful.accessToken,
-      });
-      this.locale = contentful.locale || 'en-US';
-    } catch (error) {
-      return error;
-    }
+    this.cfClient = Contentful.createClient({
+      space: contentful.space,
+      accessToken: contentful.accessToken,
+    });
+    this.locale = contentful.locale || 'en-US';
   }
 
   // Public Methods
