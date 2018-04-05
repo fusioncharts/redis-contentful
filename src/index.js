@@ -136,9 +136,9 @@ class RedisContentful {
       await hset('redis-contentful', 'nextSyncToken', response.nextSyncToken);
 
       await Promise.all(promises);
-      return Promise.resolve({ message: 'Sync Complete' });
+      return { message: 'Sync Complete' };
     } catch (error) {
-      return Promise.reject(new Error({ message: 'Sync Failed' }));
+      return new Error({ message: 'Sync Failed' });
     }
   }
 
