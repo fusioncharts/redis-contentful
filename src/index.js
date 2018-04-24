@@ -53,6 +53,9 @@ const extract = (data, field, locale) => {
     // Removing the unwanted information
     return {
       id: data.sys.id,
+      ...(data.sys.contentType &&
+        data.sys.contentType.sys &&
+        data.sys.contentType.sys.id && { type: data.sys.contentType.sys.id }),
       createdAt: data.sys.createdAt,
       updatedAt: data.sys.updatedAt,
       ...data.fields,
