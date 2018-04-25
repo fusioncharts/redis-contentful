@@ -33,9 +33,10 @@ const client = new RedisContentful({
     port: '', // Optional param, default - 6379
   },
   contentful: {
-    space: '<Space ID>',
-    accessToken: '<Access Token>',
-    locale: 'en-GB', // Optional param, default - en-US
+    space: '',
+    accessToken: '',
+    locale: '', // Optional param, default - en-US
+    identifier: '', // Identifier for searching custom keys
   },
 });
 ```
@@ -56,13 +57,12 @@ Send an optional boolean param to `sync` if you want to reset your redis cache �
 await client.sync(true);
 ```
 
-### get
+### get `directly from Redis 🚀`
 
-Gets all data directly from Redis 🚀
+Gets all data
 
 ```js
-const response = await client.get();
-console.log(response);
+await client.get();
 ```
 
 Pass specific content type. It's an optional parameter.
@@ -71,11 +71,25 @@ Pass specific content type. It's an optional parameter.
 await client.get('about');
 ```
 
-Pass a field name inside the content type to narrow down your filter.
-This is again an optional param.
+Pass an array specifying the required content types
 
 ```js
-await client.get('about', 'title');
+await client.get(['about', 'title']);
+```
+
+Pass an object to narrow down search
+
+```js
+await client.get({
+  // Content type, it can also be an array
+  type: '',
+
+  // This will search identifier key for specified value
+  search: '',
+
+  // Pass a field name inside the content type
+  field: ''
+})
 ```
 
 You'll get an object with your content type ID's as keys and their values as array of content objects.

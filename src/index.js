@@ -81,6 +81,7 @@ class RedisContentful {
       accessToken: contentful.accessToken,
     });
     this.locale = contentful.locale || 'en-US';
+    this.identifier = contentful.identifier;
   }
 
   // Public Methods
@@ -120,7 +121,15 @@ class RedisContentful {
         response.entries.forEach(entry => {
           const { sys } = entry;
           const contentType = sys.contentType.sys.id;
-          promises.push(set(`${contentType}:${sys.id}`, JSON.stringify(entry)));
+          promises.push(
+            set(
+              `${contentType}:${(entry.fields &&
+                entry.fields[this.identifier] &&
+                entry.fields[this.identifier][this.locale]) ||
+                ''}:${sys.id}`,
+              JSON.stringify(entry)
+            )
+          );
         });
       }
 
@@ -130,7 +139,7 @@ class RedisContentful {
         for (const entry of response.deletedEntries) {
           const { sys } = entry;
           // eslint-disable-next-line no-await-in-loop
-          const responseKey = await scan('0', 'MATCH', `*:${sys.id}`);
+          const responseKey = await scan('0', 'MATCH', `*:*:${sys.id}`);
 
           if (responseKey[1]) {
             promises.push(del(responseKey[1]));
@@ -147,18 +156,55 @@ class RedisContentful {
     }
   }
 
-  async get(contentType, field) {
+  async get(details) {
+    let field = '';
+    let response = [];
+    let keys = [];
     const get = promisify(this.redisClient.get).bind(this.redisClient);
     const scan = promisify(this.redisClient.scan).bind(this.redisClient);
 
-    const response = await scan(
-      '0',
-      'MATCH',
-      `${contentType ? `${contentType}:*` : '*:*'}`,
-      'COUNT',
-      '10000'
-    );
-    const keys = response[1] || [];
+    if (typeof details === 'string') {
+      response = await scan('0', 'MATCH', `${details}:*:*`, 'COUNT', '10000');
+      keys = response[1] || [];
+    } else if (details instanceof Array) {
+      const keyPromises = details.map(type =>
+        scan(
+          '0',
+          'MATCH',
+          `${type || '*'}:${details.search || '*'}:*`,
+          'COUNT',
+          '10000'
+        )
+      );
+      const keyResponses = await Promise.all(keyPromises);
+      const keysArray = keyResponses.map(keyResponse => keyResponse[1]);
+      keys = Array.prototype.concat(...keysArray);
+    } else if (details instanceof Object) {
+      field = { details };
+      if (typeof details.type === 'string') {
+        response = await scan(
+          '0',
+          'MATCH',
+          `${details.type || '*'}:${details.search || '*'}:*`,
+          'COUNT',
+          '10000'
+        );
+        keys = response[1] || [];
+      } else if (details.type instanceof Array) {
+        const keyPromises = details.type.map(type =>
+          scan(
+            '0',
+            'MATCH',
+            `${type || '*'}:${details.search || '*'}:*`,
+            'COUNT',
+            '10000'
+          )
+        );
+        const keyResponses = await Promise.all(keyPromises);
+        const keysArray = keyResponses.map(keyResponse => keyResponse[1]);
+        keys = Array.prototype.concat(...keysArray);
+      }
+    }
 
     const promises = keys.map(key => get(key));
     const responses = await Promise.all(promises);
