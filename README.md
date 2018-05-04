@@ -57,7 +57,7 @@ Send an optional boolean param to `sync` if you want to reset your redis cache �
 await client.sync(true);
 ```
 
-### get `directly from Redis 🚀`
+### get - _directly from Redis 🚀_
 
 Gets all data
 
@@ -100,6 +100,16 @@ If you specify a specific key, only that key will be returned in the final objec
     "<a-key>": [{}, {}, {}],
     "<yet-another-key>": [{}, {}]
 }
+```
+
+### Custom keys in Redis
+
+Set, get & delete your custom key - value pairs in Redis
+
+```js
+await client.setCustom('avengers', '🤯');
+await client.getCustom('avengers'); // 🤯
+await client.deleteCustom('avengers');
 ```
 
 ### close

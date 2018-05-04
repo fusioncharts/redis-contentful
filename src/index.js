@@ -223,6 +223,32 @@ class RedisContentful {
     }, {});
   }
 
+  setCustom(key, value) {
+    if (typeof key === 'string') {
+      const set = promisify(this.redisClient.set).bind(this.redisClient);
+      return set(key, JSON.stringify(value));
+    }
+    throw new Error('setCustom - key should be a string');
+  }
+
+  async getCustom(key) {
+    if (typeof key === 'string') {
+      const get = promisify(this.redisClient.get).bind(this.redisClient);
+      const response = await get(key);
+
+      return JSON.parse(response);
+    }
+    throw new Error('getCustom - key should be a string');
+  }
+
+  deleteCustom(key) {
+    if (typeof key === 'string') {
+      const del = promisify(this.redisClient.del).bind(this.redisClient);
+      return del(key);
+    }
+    throw new Error('deleteCustom - key should be a string');
+  }
+
   async close() {
     this.redisClient.quit();
   }
