@@ -112,6 +112,13 @@ await client.getCustom('avengers'); // 🤯
 await client.deleteCustom('avengers');
 ```
 
+### Changing Redis DB
+
+```js
+// Sets DB to specified value, default is 0
+await client.setDB();
+```
+
 ### close
 
 Closes the connection to redis client.

@@ -249,14 +249,9 @@ class RedisContentful {
     throw new Error('deleteCustom - key should be a string');
   }
 
-  setPrimary() {
+  setDB(index = 0) {
     const select = promisify(this.redisClient.select).bind(this.redisClient);
-    return select(0);
-  }
-
-  setSecondary() {
-    const select = promisify(this.redisClient.select).bind(this.redisClient);
-    return select(1);
+    return select(index);
   }
 
   async close() {
