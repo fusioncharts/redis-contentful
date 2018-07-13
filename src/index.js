@@ -105,10 +105,10 @@ class RedisContentful {
       }
 
       if (isInitial) {
-        const flushall = promisify(this.redisClient.flushall).bind(
+        const flushdb = promisify(this.redisClient.flushdb).bind(
           this.redisClient
         );
-        await flushall();
+        await flushdb();
       }
 
       const response = await this.cfClient.sync({
@@ -247,6 +247,16 @@ class RedisContentful {
       return del(key);
     }
     throw new Error('deleteCustom - key should be a string');
+  }
+
+  setPrimary() {
+    const select = promisify(this.redisClient.select).bind(this.redisClient);
+    return select(0);
+  }
+
+  setSecondary() {
+    const select = promisify(this.redisClient.select).bind(this.redisClient);
+    return select(1);
   }
 
   async close() {
