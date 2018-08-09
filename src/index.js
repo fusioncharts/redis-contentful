@@ -157,6 +157,7 @@ class RedisContentful {
   }
 
   async get(details) {
+    console.time('redis-contentful get API');
     let field = '';
     let response = [];
     let keys = [];
@@ -207,9 +208,12 @@ class RedisContentful {
     }
 
     const promises = keys.map(key => get(key));
-    const responses = await Promise.all(promises);
 
-    return keys.reduce((final, value, index) => {
+    console.time('redis-contentful get REDIS');
+    const responses = await Promise.all(promises);
+    console.timeEnd('redis-contentful get REDIS');
+
+    const result = keys.reduce((final, value, index) => {
       if (final[value.split(':').shift()]) {
         final[value.split(':').shift()].push(
           extract(JSON.parse(responses[index]), field, this.locale)
@@ -221,6 +225,9 @@ class RedisContentful {
       }
       return final;
     }, {});
+
+    console.timeEnd('redis-contentful get API');
+    return result;
   }
 
   setCustom(key, value) {
