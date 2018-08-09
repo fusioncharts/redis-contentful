@@ -157,7 +157,7 @@ class RedisContentful {
   }
 
   async get(details) {
-    console.time('redis-contentful get API');
+    console.time(`redis-contentful get API - ${details}`);
     let field = '';
     let response = [];
     let keys = [];
@@ -209,9 +209,9 @@ class RedisContentful {
 
     const promises = keys.map(key => get(key));
 
-    console.time('redis-contentful get REDIS');
+    console.time(`redis-contentful REDIS - ${details}`);
     const responses = await Promise.all(promises);
-    console.timeEnd('redis-contentful get REDIS');
+    console.timeEnd(`redis-contentful REDIS - ${details}`);
 
     const result = keys.reduce((final, value, index) => {
       if (final[value.split(':').shift()]) {
@@ -226,7 +226,7 @@ class RedisContentful {
       return final;
     }, {});
 
-    console.timeEnd('redis-contentful get API');
+    console.timeEnd(`redis-contentful get API - ${details}`);
     return result;
   }
 
