@@ -12,10 +12,11 @@ const Contentful = require('contentful');
  */
 const extract = (data, locale) => {
   if (data && data.fields) {
+    const details = {};
     const { fields } = data;
     Object.keys(fields).forEach(fieldKey => {
       if (fields[fieldKey] && fields[fieldKey][locale] instanceof Array) {
-        fields[fieldKey] = fields[fieldKey][locale].map(innerData =>
+        details[fieldKey] = fields[fieldKey][locale].map(innerData =>
           extract(innerData, locale)
         );
       } else if (
@@ -23,9 +24,10 @@ const extract = (data, locale) => {
         fields[fieldKey][locale] instanceof Object &&
         fields[fieldKey][locale].fields
       ) {
-        fields[fieldKey] = extract(fields[fieldKey][locale], locale);
+        details[fieldKey] = extract(fields[fieldKey][locale], locale);
       } else {
-        fields[fieldKey] = fields[fieldKey][locale];
+        details[fieldKey] =
+          (fields[fieldKey] && fields[fieldKey][locale]) || '';
       }
     });
 
@@ -37,7 +39,7 @@ const extract = (data, locale) => {
         data.sys.contentType.sys.id && { type: data.sys.contentType.sys.id }),
       createdAt: data.sys.createdAt,
       updatedAt: data.sys.updatedAt,
-      ...data.fields,
+      ...details,
     };
   } else if (typeof data === 'string' || typeof data === 'number') {
     return data;
@@ -102,13 +104,14 @@ class RedisContentful {
         response.entries.forEach(entry => {
           const { sys } = entry;
           const contentType = sys.contentType.sys.id;
+          const extracted = extract(entry, this.locale);
           promises.push(
             this.rSet(
               `${contentType}:${(entry.fields &&
                 entry.fields[this.identifier] &&
                 entry.fields[this.identifier][this.locale]) ||
                 ''}:${sys.id}`,
-              JSON.stringify(entry)
+              JSON.stringify(extracted)
             )
           );
         });
@@ -137,7 +140,7 @@ class RedisContentful {
       await Promise.all(promises);
       return { message: 'Sync Complete' };
     } catch (error) {
-      return new Error({ message: 'Sync Failed' });
+      throw new Error(error);
     }
   }
 
@@ -194,22 +197,8 @@ class RedisContentful {
     }
 
     const promises = keys.map(key => this.rGet(key));
-
     const responses = await Promise.all(promises);
-
-    const result = keys.reduce((final, value, index) => {
-      if (final[value.split(':').shift()]) {
-        final[value.split(':').shift()].push(
-          extract(JSON.parse(responses[index]), this.locale)
-        );
-      } else {
-        final[value.split(':').shift()] = [
-          extract(JSON.parse(responses[index]), this.locale),
-        ];
-      }
-      return final;
-    }, {});
-    return result;
+    return responses;
   }
 
   setCustom(key, value) {
