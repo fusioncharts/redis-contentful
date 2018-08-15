@@ -198,7 +198,15 @@ class RedisContentful {
 
     const promises = keys.map(key => this.rGet(key));
     const responses = await Promise.all(promises);
-    return responses;
+    const result = keys.reduce((final, value, index) => {
+      if (final[value.split(':').shift()]) {
+        final[value.split(':').shift()].push(JSON.parse(responses[index]));
+      } else {
+        final[value.split(':').shift()] = [JSON.parse(responses[index])];
+      }
+      return final;
+    }, {});
+    return result;
   }
 
   setCustom(key, value) {
