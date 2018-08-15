@@ -10,45 +10,24 @@ const Contentful = require('contentful');
  * @param {string} locale
  * @returns {object}
  */
-const extract = (data, field, locale) => {
+const extract = (data, locale) => {
   if (data && data.fields) {
     const { fields } = data;
-    if (field && typeof field === 'string') {
-      // Deleting any other fields if specific field is provided
-      Object.keys(fields).forEach(fieldKey => {
-        if (field !== fieldKey) delete fields[fieldKey];
-      });
-
-      // If the field given is of primitive data type
-      if (
-        typeof fields[field][locale] === 'string' ||
-        typeof fields[field][locale] === 'number'
-      ) {
-        fields[field] = fields[field][locale];
-      } else if (fields[field][locale] instanceof Array) {
-        fields[field] = fields[field][locale].map(innerData =>
-          extract(innerData, '', locale)
+    Object.keys(fields).forEach(fieldKey => {
+      if (fields[fieldKey] && fields[fieldKey][locale] instanceof Array) {
+        fields[fieldKey] = fields[fieldKey][locale].map(innerData =>
+          extract(innerData, locale)
         );
-      } else if (fields[field][locale] instanceof Object) {
-        fields[field] = extract(fields[field][locale], '', locale);
+      } else if (
+        fields[fieldKey] &&
+        fields[fieldKey][locale] instanceof Object &&
+        fields[fieldKey][locale].fields
+      ) {
+        fields[fieldKey] = extract(fields[fieldKey][locale], locale);
+      } else {
+        fields[fieldKey] = fields[fieldKey][locale];
       }
-    } else {
-      Object.keys(fields).forEach(fieldKey => {
-        if (fields[fieldKey] && fields[fieldKey][locale] instanceof Array) {
-          fields[fieldKey] = fields[fieldKey][locale].map(innerData =>
-            extract(innerData, '', locale)
-          );
-        } else if (
-          fields[fieldKey] &&
-          fields[fieldKey][locale] instanceof Object &&
-          fields[fieldKey][locale].fields
-        ) {
-          fields[fieldKey] = extract(fields[fieldKey][locale], '', locale);
-        } else {
-          fields[fieldKey] = fields[fieldKey][locale];
-        }
-      });
-    }
+    });
 
     // Removing the unwanted information
     return {
@@ -82,17 +61,19 @@ class RedisContentful {
     });
     this.locale = contentful.locale || 'en-US';
     this.identifier = contentful.identifier;
+
+    // redis functions
+    this.rGet = promisify(this.redisClient.get).bind(this.redisClient);
+    this.rScan = promisify(this.redisClient.scan).bind(this.redisClient);
+    this.rSet = promisify(this.redisClient.set).bind(this.redisClient);
+    this.rHGet = promisify(this.redisClient.hget).bind(this.redisClient);
+    this.rHSet = promisify(this.redisClient.hset).bind(this.redisClient);
+    this.rDel = promisify(this.redisClient.del).bind(this.redisClient);
   }
 
   // Public Methods
   async sync(shouldReset) {
     try {
-      const set = promisify(this.redisClient.set).bind(this.redisClient);
-      const scan = promisify(this.redisClient.scan).bind(this.redisClient);
-      const hget = promisify(this.redisClient.hget).bind(this.redisClient);
-      const hset = promisify(this.redisClient.hset).bind(this.redisClient);
-      const del = promisify(this.redisClient.del).bind(this.redisClient);
-
       const promises = [];
 
       let isInitial;
@@ -100,7 +81,7 @@ class RedisContentful {
       if (shouldReset) {
         isInitial = true;
       } else {
-        nextSyncToken = await hget('redis-contentful', 'nextSyncToken');
+        nextSyncToken = await this.rHGet('redis-contentful', 'nextSyncToken');
         isInitial = !nextSyncToken;
       }
 
@@ -122,7 +103,7 @@ class RedisContentful {
           const { sys } = entry;
           const contentType = sys.contentType.sys.id;
           promises.push(
-            set(
+            this.rSet(
               `${contentType}:${(entry.fields &&
                 entry.fields[this.identifier] &&
                 entry.fields[this.identifier][this.locale]) ||
@@ -139,15 +120,19 @@ class RedisContentful {
         for (const entry of response.deletedEntries) {
           const { sys } = entry;
           // eslint-disable-next-line no-await-in-loop
-          const responseKey = await scan('0', 'MATCH', `*:*:${sys.id}`);
+          const responseKey = await this.rScan('0', 'MATCH', `*:*:${sys.id}`);
 
           if (responseKey[1]) {
-            promises.push(del(responseKey[1]));
+            promises.push(this.rDel(responseKey[1]));
           }
         }
       }
 
-      await hset('redis-contentful', 'nextSyncToken', response.nextSyncToken);
+      await this.rHSet(
+        'redis-contentful',
+        'nextSyncToken',
+        response.nextSyncToken
+      );
 
       await Promise.all(promises);
       return { message: 'Sync Complete' };
@@ -157,19 +142,21 @@ class RedisContentful {
   }
 
   async get(details) {
-    console.time(`redis-contentful get API - ${details.search}`);
-    let field = '';
     let response = [];
     let keys = [];
-    const get = promisify(this.redisClient.get).bind(this.redisClient);
-    const scan = promisify(this.redisClient.scan).bind(this.redisClient);
 
     if (typeof details === 'string') {
-      response = await scan('0', 'MATCH', `${details}:*:*`, 'COUNT', '10000');
+      response = await this.rScan(
+        '0',
+        'MATCH',
+        `${details}:*:*`,
+        'COUNT',
+        '10000'
+      );
       keys = response[1] || [];
     } else if (details instanceof Array) {
       const keyPromises = details.map(type =>
-        scan(
+        this.rScan(
           '0',
           'MATCH',
           `${type || '*'}:${details.search || '*'}:*`,
@@ -181,9 +168,8 @@ class RedisContentful {
       const keysArray = keyResponses.map(keyResponse => keyResponse[1]);
       keys = Array.prototype.concat(...keysArray);
     } else if (details instanceof Object) {
-      field = { details };
       if (typeof details.type === 'string') {
-        response = await scan(
+        response = await this.rScan(
           '0',
           'MATCH',
           `${details.type || '*'}:${details.search || '*'}:*`,
@@ -193,7 +179,7 @@ class RedisContentful {
         keys = response[1] || [];
       } else if (details.type instanceof Array) {
         const keyPromises = details.type.map(type =>
-          scan(
+          this.rScan(
             '0',
             'MATCH',
             `${type || '*'}:${details.search || '*'}:*`,
@@ -207,26 +193,22 @@ class RedisContentful {
       }
     }
 
-    const promises = keys.map(key => get(key));
+    const promises = keys.map(key => this.rGet(key));
 
-    console.time(`redis-contentful REDIS - ${details.search}`);
     const responses = await Promise.all(promises);
-    console.timeEnd(`redis-contentful REDIS - ${details.search}`);
 
     const result = keys.reduce((final, value, index) => {
       if (final[value.split(':').shift()]) {
         final[value.split(':').shift()].push(
-          extract(JSON.parse(responses[index]), field, this.locale)
+          extract(JSON.parse(responses[index]), this.locale)
         );
       } else {
         final[value.split(':').shift()] = [
-          extract(JSON.parse(responses[index]), field, this.locale),
+          extract(JSON.parse(responses[index]), this.locale),
         ];
       }
       return final;
     }, {});
-
-    console.timeEnd(`redis-contentful get API - ${details.search}`);
     return result;
   }
 
