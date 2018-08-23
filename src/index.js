@@ -63,6 +63,7 @@ class RedisContentful {
     });
     this.locale = contentful.locale || 'en-US';
     this.identifier = contentful.identifier;
+    this.contentTypes = contentful.contentTypes || [];
 
     // redis functions
     this.rGet = promisify(this.redisClient.get).bind(this.redisClient);
@@ -87,6 +88,11 @@ class RedisContentful {
         isInitial = !nextSyncToken;
       }
 
+      const response = await this.cfClient.sync({
+        ...(isInitial && { initial: true }),
+        ...(!isInitial && { nextSyncToken }),
+      });
+
       if (isInitial) {
         const flushdb = promisify(this.redisClient.flushdb).bind(
           this.redisClient
@@ -94,14 +100,16 @@ class RedisContentful {
         await flushdb();
       }
 
-      const response = await this.cfClient.sync({
-        ...(isInitial && { initial: true }),
-        ...(!isInitial && { nextSyncToken }),
-      });
-
       // Adding all new entries in redis
       if (response.entries && response.entries.length) {
-        response.entries.forEach(entry => {
+        const finalEntries = this.contentTypes.length
+          ? response.entries.filter(
+              entry =>
+                this.contentTypes.indexOf(entry.sys.contentType.sys.id) > -1
+            )
+          : response.entries;
+
+        finalEntries.forEach(entry => {
           const { sys } = entry;
           const contentType = sys.contentType.sys.id;
           const extracted = extract(entry, this.locale);
