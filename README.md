@@ -85,10 +85,7 @@ await client.get({
   type: '',
 
   // This will search identifier key for specified value
-  search: '',
-
-  // Pass a field name inside the content type
-  field: ''
+  search: ''
 })
 ```
 

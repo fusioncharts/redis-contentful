@@ -6,7 +6,6 @@ const Contentful = require('contentful');
  * A recursive function to extract meaningful
  * information from Redis.
  * @param {object} data
- * @param {string} field
  * @param {string} locale
  * @returns {object}
  */
