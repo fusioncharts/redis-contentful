@@ -59,6 +59,7 @@ class RedisContentful {
     this.cfClient = Contentful.createClient({
       space: contentful.space,
       accessToken: contentful.accessToken,
+      environment: contentful.environment || 'master',
     });
     this.locale = contentful.locale || 'en-US';
     this.identifier = contentful.identifier;
