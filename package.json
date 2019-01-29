@@ -1,6 +1,6 @@
 {
   "name": "redis-contentful",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "description": "A tiny library to map Contentful ☁️ space into Redis ⚡️",
   "main": "src/index.js",
   "scripts": {
