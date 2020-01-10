@@ -220,9 +220,18 @@ class RedisContentful {
     return final;
   }
 
-  setCustom(key, value) {
+  /**
+   *
+   * @param {string} key - provide string as key
+   * @param {string} value - provide string as value
+   * @param {number} expire - provide number in seconds
+   */
+  setCustom(key, value, expire) {
     if (typeof key === 'string') {
       const set = promisify(this.redisClient.set).bind(this.redisClient);
+      if (expire) {
+        return set(key, JSON.stringify(value), 'EX', expire);
+      }
       return set(key, JSON.stringify(value));
     }
     throw new Error('setCustom - key should be a string');
