@@ -34,7 +34,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shreyas-a/redis-contentful.git"
+    "url": "git+https://github.com/fusioncharts/redis-contentful.git"
   },
   "keywords": [
     "contentful",
@@ -42,10 +42,10 @@
     "cms",
     "cache"
   ],
-  "author": "Shreyas Agarkar <shreyas.a24@gmail.com>",
+  "author": "InfoSoft Global Pvt. Ltd.  <support@fusioncharts.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/shreyas-a/redis-contentful/issues"
+    "url": "https://github.com/fusioncharts/redis-contentful/issues"
   },
-  "homepage": "https://github.com/shreyas-a/redis-contentful#readme"
+  "homepage": "https://github.com/fusioncharts/redis-contentful#readme"
 }

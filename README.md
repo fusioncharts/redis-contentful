@@ -1,4 +1,4 @@
-# Redis Contentful [![npm](https://img.shields.io/npm/v/redis-contentful.svg)](https://www.npmjs.com/package/redis-contentful) [![license](https://img.shields.io/github/license/shreyas-a/redis-contentful.svg)](https://github.com/shreyas-a/redis-contentful/blob/master/LICENSE)
+# Redis Contentful [![npm](https://img.shields.io/npm/v/redis-contentful.svg)](https://www.npmjs.com/package/redis-contentful) [![license](https://img.shields.io/github/license/fusioncharts/redis-contentful.svg)](https://github.com/fusioncharts/redis-contentful/blob/master/LICENSE)
 
 A tiny library to map Contentful ☁️ space into Redis ⚡️
 
@@ -36,7 +36,8 @@ const client = new RedisContentful({
     space: '',
     accessToken: '',
     locale: '', // Optional param, default - en-US
-    identifier: '', // Identifier for searching custom keys
+    identifier: '', // Identifier for searching custom keys,
+    environment: '', // contentful environment, default is master
   },
 });
 ```
@@ -85,8 +86,8 @@ await client.get({
   type: '',
 
   // This will search identifier key for specified value
-  search: ''
-})
+  search: '',
+});
 ```
 
 You'll get an object with your content type ID's as keys and their values as array of content objects.
@@ -105,6 +106,8 @@ Set, get & delete your custom key - value pairs in Redis
 
 ```js
 await client.setCustom('avengers', '🤯');
+/* can set expire time in seconds. Third parameter is optional */
+await client.setCustom('Hulk', "I'm Hulk!", 60);
 await client.getCustom('avengers'); // 🤯
 await client.deleteCustom('avengers');
 ```
